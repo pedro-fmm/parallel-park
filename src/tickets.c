@@ -26,7 +26,7 @@ void *sell(void *args){
     while (!is_queue_empty(gate_queue)) {
         // tira da fila um cliente
         int cliente = dequeue(gate_queue);
-        debug("[INFO] - Cliente %d foi atendido na bilheteria %d!\n", cliente, ticket->id);
+        debug("[INFO] - Turista %d foi atendido na bilheteria %d!\n", cliente, ticket->id);
     }
     // libera o mutex fora do while, para cobrir o caso da fila estar vazia ou não
     pthread_mutex_unlock(&mutex_gate_queue);

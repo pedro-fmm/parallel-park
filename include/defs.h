@@ -14,6 +14,8 @@
 #define MAX_CAPACITY_TOY    10  // Capacidade maxima dos brinquedos.
 #define MIN_CAPACITY_TOY    5   // Capacidade minima dos brinquedos.
 #define MAX_COINS           20  // Maximo de moedas que um cliente pode comprar
+#define MIN_COINS           5  // Maximo de moedas que um cliente pode comprar
+
 
 #define DEBUG               1   //  Alterne (0 or 1) essa macro se voce espera desabilitar todas as mensagens de debug.
 

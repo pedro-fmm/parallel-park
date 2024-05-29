@@ -20,12 +20,13 @@ void *enjoy(void *arg){
 
 
     debug("[EXIT] - O turista saiu do parque.\n");
+
     pthread_exit(NULL);
 }
 
 // Funcao onde o cliente compra as moedas para usar os brinquedos
 void buy_coins(client_t *self){
-    // Sua lógica aqui
+    self->coins = rand() % (MAX_COINS - MIN_COINS + 1) + MIN_COINS;
 }
 
 // Função onde o cliente espera a liberacao da bilheteria para adentrar ao parque.
@@ -38,6 +39,7 @@ void queue_enter(client_t *self){
     // Sua lógica aqui.
     debug("[WAITING] - Turista [%d] entrou na fila do portao principal\n", self->id);
 
+    enqueue(gate_queue, self->id);
     // Sua lógica aqui.
     buy_coins(self);
 
@@ -51,6 +53,7 @@ void open_gate(client_args *args){
     pthread_t id_thread[args->n];
     for (int i = 0; i < args->n; i++) {
         pthread_create(&id_thread[i], NULL, enjoy, (void *) args->clients[i]);
+        queue_enter(args->clients[i]);
     }
 }
 

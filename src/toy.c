@@ -20,6 +20,8 @@ void *turn_on(void *args){
 
     debug("[ON] - O brinquedo  [%d] foi ligado.\n", toy->id); // Altere para o id do brinquedo
 
+    sleep(5);
+
     debug("[OFF] - O brinquedo [%d] foi desligado.\n", toy->id); // Altere para o id do brinquedo
 
     pthread_exit(NULL);
@@ -35,9 +37,10 @@ void open_toys(toy_args *args){
         args->toys[i]->thread = id_thread[i];
         pthread_create(&id_thread[i], NULL, turn_on, (void *) args->toys[i]);
     }
+
 }
 
 // Desligando os brinquedos
 void close_toys(){
-
+    
 }
