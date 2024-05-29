@@ -47,7 +47,11 @@ void queue_enter(client_t *self){
 
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
-    // Sua lógica aqui
+    // Inicializando uma thread para cada um dos clientes
+    pthread_t id_thread[args->n];
+    for (int i = 0; i < args->n; i++) {
+        pthread_create(&id_thread[i], NULL, enjoy, (void *) args->clients[i]);
+    }
 }
 
 // Essa função deve finalizar os clientes
