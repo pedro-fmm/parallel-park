@@ -5,7 +5,7 @@
 
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
-
+extern int NUM_TOYS;
 
 /**********************************
  *          ATENÇÃO               *

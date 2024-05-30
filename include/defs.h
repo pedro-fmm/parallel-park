@@ -14,6 +14,7 @@
 #define MAX_CAPACITY_TOY    10  // Capacidade maxima dos brinquedos.
 #define MIN_CAPACITY_TOY    5   // Capacidade minima dos brinquedos.
 #define MAX_COINS           20  // Maximo de moedas que um cliente pode comprar
+#define MIN_COINS           5  // Minimo de moedas que um cliente pode comprar
 
 #define DEBUG               1   //  Alterne (0 or 1) essa macro se voce espera desabilitar todas as mensagens de debug.
 
@@ -37,6 +38,7 @@ typedef struct client{
   int coins;                // Quantidade de moedas do cliente.
   int number_toys;          // Numero de brinquedos disponiveis.
   toy_t **toys;             // (Copy) Array de brinquedos.
+  pthread_mutex_t mutex;     // mutex do cliente adicionado posteriormente
 } client_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */

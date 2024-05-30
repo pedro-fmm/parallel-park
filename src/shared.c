@@ -5,6 +5,7 @@
 
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
+int NUM_TOYS;
 
 /**********************************
  *          ATENÇÃO               *
