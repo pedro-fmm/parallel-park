@@ -12,7 +12,7 @@
 #include "queue.h"
 #include "shared.h"
 
-pthread_mutex_t mutex_client; // Declarando o mutex usado para proteger o enqueue
+pthread_mutex_t mutex_gate_queue_client; // Declarando o mutex usado para proteger o enqueue
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg){
@@ -40,9 +40,9 @@ void queue_enter(client_t *self){
     // Sua lógica aqui.
     debug("[WAITING] - Turista [%d] entrou na fila do portao principal\n", self->id);
 
-    pthread_mutex_lock(&mutex_client); // Protege o acesso a enqueue, para não ocorrer condição de corrida;
+    pthread_mutex_lock(&mutex_gate_queue_client); // Protege o acesso a enqueue, para não ocorrer condição de corrida;
     enqueue(gate_queue, self->id);
-    pthead_mutex_unlock(&mutex_client);
+    pthead_mutex_unlock(&mutex_gate_queue_client);
     // Sua lógica aqui.
     buy_coins(self);
 
@@ -53,7 +53,7 @@ void queue_enter(client_t *self){
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
     // Inicializando uma thread para cada um dos clientes
-    pthread_mutex_init(&mutex_client, NULL);
+    pthread_mutex_init(&mutex_gate_queue_client, NULL);
     pthread_t id_thread[args->n];
     for (int i = 0; i < args->n; i++) {
         pthread_create(&id_thread[i], NULL, enjoy, (void *) args->clients[i]);
@@ -63,6 +63,6 @@ void open_gate(client_args *args){
 
 // Essa função deve finalizar os clientes
 void close_gate(){
-    pthread_mutex_destroy(&mutex_client); // Finaliza o mutex;
+    pthread_mutex_destroy(&mutex_gate_queue_client); // Finaliza o mutex;
    //Sua lógica aqui
 }
