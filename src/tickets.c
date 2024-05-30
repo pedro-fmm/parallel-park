@@ -22,9 +22,12 @@ void *sell(void *args){
     debug("[INFO] - Bilheteria Abriu!\n");
 
     
-    while (!is_queue_empty(gate_queue)) { // PENSAR SOBRE ESSA VERIFICAÇÂO FORA DO WHILE
+    while (1) {
+        pthread_mutex_lock(&mutex_gate_queue_tickets);// da lock no mutex para evitar condição de corrida na hora de verificar e retirar da fila
+        if (is_queue_empty(gate_queue)){
+            break;
+        }
         // tira da fila um cliente
-        pthread_mutex_lock(&mutex_gate_queue_tickets);// da lock no mutex para evitar condição de corrida na hora de retirar da fila
         int cliente = dequeue(gate_queue);
         debug("[INFO] - Turista %d foi atendido na bilheteria %d!\n", cliente, ticket->id);
         pthread_mutex_unlock(&mutex_gate_queue_tickets);

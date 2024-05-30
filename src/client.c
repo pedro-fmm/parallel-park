@@ -19,7 +19,7 @@ void *enjoy(void *arg){
 
     //Sua lógica aqui
 
-    queue_enter(arg[i]);
+    queue_enter(arg);
 
 
 
