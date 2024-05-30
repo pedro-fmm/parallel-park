@@ -39,7 +39,6 @@ typedef struct client{
   int coins;                // Quantidade de moedas do cliente.
   int number_toys;          // Numero de brinquedos disponiveis.
   toy_t **toys;             // (Copy) Array de brinquedos.
-  pthread_mutex_t mutex;    // mutex para sincronizar acesso a bilheteria
 } client_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */

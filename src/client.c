@@ -19,6 +19,9 @@ void *enjoy(void *arg){
 
     //Sua lógica aqui
 
+    queue_enter(arg[i]);
+
+
 
     debug("[EXIT] - O turista saiu do parque.\n");
 
@@ -43,6 +46,7 @@ void queue_enter(client_t *self){
     pthread_mutex_lock(&mutex_gate_queue_client); // Protege o acesso a enqueue, para não ocorrer condição de corrida;
     enqueue(gate_queue, self->id);
     pthead_mutex_unlock(&mutex_gate_queue_client);
+
     // Sua lógica aqui.
     buy_coins(self);
 
@@ -57,7 +61,6 @@ void open_gate(client_args *args){
     pthread_t id_thread[args->n];
     for (int i = 0; i < args->n; i++) {
         pthread_create(&id_thread[i], NULL, enjoy, (void *) args->clients[i]);
-        queue_enter(args->clients[i]);
     }
 }
 
