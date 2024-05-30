@@ -12,6 +12,8 @@
 #include "toy.h"
 #include "shared.h"
 
+pthread_t *toy_threads_id;
+int toy_n_threads;
 
 // Thread que o brinquedo vai usar durante toda a simulacao do sistema
 void *turn_on(void *args){
@@ -29,9 +31,9 @@ void *turn_on(void *args){
             break;
         }
         cont++;
-
     }
-    sleep(5);
+
+    sleep(1);
 
     debug("[OFF] - O brinquedo [%d] foi desligado.\n", toy->id); // Altere para o id do brinquedo
 
@@ -42,18 +44,19 @@ void *turn_on(void *args){
 // Essa função recebe como argumento informações e deve iniciar os brinquedos.
 void open_toys(toy_args *args){
     // Inicializando uma thread para cada um dos brinquedos
-    pthread_t id_thread[args->n];
+    toy_threads_id = (pthread_t *) malloc(args->n * sizeof(pthread_t));
+    toy_n_threads = args->n;
     for (int i = 0; i < args->n; i++) {
         // atribui o id da thread ao toy correspondente
-        args->toys[i]->thread = id_thread[i];
-        // Atribui a capacidade máxima de cada brinquedo
-        args->toys[i]->capacity = (rand() % (MAX_CAPACITY_TOY - MIN_CAPACITY_TOY + 1)) + MIN_CAPACITY_TOY; 
-        pthread_create(&id_thread[i], NULL, turn_on, (void *) args->toys[i]);
+        args->toys[i]->thread = toy_threads_id[i];
+        pthread_create(&toy_threads_id[i], NULL, turn_on, (void *) args->toys[i]);
     }
 
 }
 
 // Desligando os brinquedos
 void close_toys(){
-    
+    for (int i = 0; i < toy_n_threads; i++) 
+        pthread_join(toy_threads_id[i], NULL);
+    free(toy_threads_id);
 }

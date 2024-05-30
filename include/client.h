@@ -5,7 +5,7 @@
 
 // Você pode declarar novas funções aqui
 
-
+void queue_enter(client_t *self);
 
 /********************************
  *          ATENÇÃO             *
