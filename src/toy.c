@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "toy.h"
 #include "shared.h"
@@ -15,17 +16,46 @@
 pthread_t *toy_thread_ids; // alocando o vetor de threads de maneira pública, para conseguir rodar o close_toys
 int toy_n_args;
 
+#define TEMPO_BRINQUEDO 10
 // Thread que o brinquedo vai usar durante toda a simulacao do sistema
-void *turn_on(void *args){
+void *turn_on(void *args) {
 
     toy_t *toy = (toy_t *) args;
 
-    debug("[ON] - O brinquedo  [%d] foi ligado.\n", toy->id); // Altere para o id do brinquedo
+    pthread_mutex_init(&toy->mutex_numero_clientes, NULL); // Inicializando o mutex do brinquedo
+    pthread_cond_init(&toy->cond_toy, NULL); // Inicializando a condição do brinquedo
 
-    // sleep(1);
+    debug("[ON] - O brinquedo  [%d] foi ligado.\n", toy->id);
 
-    debug("[OFF] - O brinquedo [%d] foi desligado.\n", toy->id); // Altere para o id do brinquedo
+    time_t start_time = time(NULL); // Obtém o tempo inicial
 
+    while (TRUE) {
+        time_t current_time = time(NULL);
+        double elapsed_time = difftime(current_time, start_time);
+
+        if (elapsed_time >= TEMPO_BRINQUEDO) {
+            break; // Sai do loop se o tempo máximo de operação for atingido
+        }
+
+        pthread_mutex_lock(&toy->mutex_numero_clientes);
+        if (toy->n_clientes_atual > 0) {
+            debug("[BRINCAR] - Brinquedo [%d] está funcionando com [%d] clientes.\n", toy->id, toy->n_clientes_atual);
+            pthread_mutex_unlock(&toy->mutex_numero_clientes);
+            sleep(5);  // Simula a duração da brincadeira
+            pthread_mutex_lock(&toy->mutex_numero_clientes);
+            toy->n_clientes_atual = 0;  // Libera todos os clientes do brinquedo após a brincadeira
+            pthread_cond_broadcast(&toy->cond_toy);
+            pthread_mutex_unlock(&toy->mutex_numero_clientes);
+        } else {
+            pthread_mutex_unlock(&toy->mutex_numero_clientes);
+        }
+        sleep(1);  // Pausa breve antes de verificar novamente
+    }
+
+    debug("[OFF] - O brinquedo [%d] foi desligado.\n", toy->id);
+
+    pthread_mutex_destroy(&toy->mutex_numero_clientes);
+    pthread_cond_destroy(&toy->cond_toy);
     pthread_exit(NULL);
 }
 
@@ -44,6 +74,6 @@ void open_toys(toy_args *args){
 // Desligando os brinquedos
 void close_toys(){
     for (int i = 0; i < toy_n_args; i++)
-        pthread_join(toy_thread_ids[i], NULL);  // dando join em todas threads
+        pthread_join(toy_thread_ids[i], NULL);  // Sicronizando a finalização das threads
     free(toy_thread_ids); // liberando a memoria do vetor de threads
 }

@@ -30,6 +30,9 @@ typedef struct toy{
   int id;                   // O id de um brinquedo.
   int capacity;             // A capacidade total de um brinquedo.
   pthread_t thread;         // A thread de um brinquedo.
+  int n_clientes_atual;     // Variavel para ver o número de clientes atualmente no brinquedo
+  pthread_mutex_t mutex_numero_clientes; // Mutex para proteger n_clientes_atual
+  pthread_cond_t cond_toy;               // Condicional para controlar a quantidade de turista no brinquedo
 } toy_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */

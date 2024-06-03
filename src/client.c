@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 
 #include "defs.h"
 #include "client.h"
@@ -16,26 +18,45 @@ pthread_t *client_thread_ids; // alocando o vetor de threads de maneira pública
 int client_n_args;
 
 pthread_mutex_t mutex_gate_queue; // mutex para proteger queue
-pthread_cond_t cond_gate_open; // condição para liberar entrada ao parque/portao
-
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg){
 
     client_t *client = (client_t *) arg; // fazendo cast do client
 
-    pthread_mutex_init(&client->mutex, NULL); // travando acesso ao cliente
+    pthread_mutex_init(&client->mutex, NULL); // Inicializando o mutex de cada cliente
 
-    queue_enter(client);
-    wait_client(client);
+    queue_enter(client); // Turista entra na fila, e compra as moedas
 
     debug("[EXIT] - O turista [%d] entrou no parque.\n", client->id);
 
     // enquanto cliente tem moeda, escolher um brinquedo e andar
     while (client->coins > 0) {
-        // int toy_id = rand() % NUM_TOYS;
-        // debug("[BRINCAR] - Turista [%d] está na fila do brinquedo [%d].\n", client->id, toy_id);
-        // toy_use(toy_id, client);
+        // Cliente escolhe um brinquedo
+        int toy_id = rand() % NUM_TOYS;
+        toy_t *toy = client->toys[toy_id];
+
+        //Protege o acesso a n_clientes_atual
+        pthread_mutex_lock(&toy->mutex_numero_clientes);
+        //Aguarda o brinquedo ter espaço
+        while (toy->n_clientes_atual >= toy->capacity) {
+            pthread_cond_wait(&toy->cond_toy, &toy->mutex_numero_clientes);
+        }
+        // Atualiza o numero de clientes no brinquedo
+        toy->n_clientes_atual++;
+        debug("[BRINCAR] - Turista [%d] entrou no brinquedo [%d].\n", client->id, toy_id);
+        pthread_mutex_unlock(&toy->mutex_numero_clientes);
+
+        // Brinca no brinquedo
+        sleep(5);
+        
+        // Sai do cliente e atualiza o numero de clientes
+        pthread_mutex_lock(&toy->mutex_numero_clientes);
+        toy->n_clientes_atual--;
+        pthread_cond_signal(&toy->cond_toy);
+        pthread_mutex_unlock(&toy->mutex_numero_clientes);
+
+        // Diminui a quantidade de moedas do cliente
         client->coins--;
     }
 
@@ -49,38 +70,37 @@ void buy_coins(client_t *self){
 }
 
 // Função onde o cliente espera a liberacao da bilheteria para adentrar ao parque.
-void wait_client(client_t *self){
-    pthread_mutex_lock(&self->mutex);
-    // while (!self->ticket) {
-    //     pthread_cond_wait(&cond_gate_open, &self->mutex);
-    // }
-    pthread_mutex_unlock(&self->mutex);
+void wait_ticket(client_t *self){
+    // Utilizamos a thread condicional, para que o turista só entre no parque depois que for atendido pela bilheteria
+    pthread_mutex_lock(&mutex_client_id_global);
+    while (self->id != client_id_global) {
+        pthread_cond_wait(&cond_client_id, &mutex_client_id_global);
+    }
+    pthread_mutex_unlock(&mutex_client_id_global);
 }
 
 // Funcao onde o cliente entra na fila da bilheteria
 void queue_enter(client_t *self){
-    // Sua lógica aqui.
     debug("[WAITING] - Turista [%d] entrou na fila do portao principal\n", self->id);
 
     pthread_mutex_lock(&mutex_gate_queue); // protege o acesso a fila
     enqueue(gate_queue, self->id); // enfileira o cliente para a bilheteria
     pthread_mutex_unlock(&mutex_gate_queue); 
 
-    // Sua lógica aqui.
+    // Espera o cliente ser atendido na bilheteria para comprar as moedas
+    wait_ticket(self);
     buy_coins(self);
 
-    // Sua lógica aqui.
     debug("[CASH] - Turista [%d] comprou [%d] moedas.\n", self->id, self->coins);
 }
 
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
     pthread_mutex_init(&mutex_gate_queue, NULL);
-    pthread_cond_init(&cond_gate_open, NULL);
     client_n_args = args->n;
     client_thread_ids = (pthread_t *) malloc(client_n_args * sizeof(pthread_t)); // alocando o vetor de threads com tamanho dinâmico
     for (int i = 0; i < client_n_args; i++) {
-        pthread_create(&client_thread_ids[i], NULL, enjoy, (void *) args->clients[i]); // inicializando cada bilheteria
+        pthread_create(&client_thread_ids[i], NULL, enjoy, (void *) args->clients[i]); // inicializando cada cliente
     }
 }
 
@@ -90,5 +110,4 @@ void close_gate(){
         pthread_join(client_thread_ids[i], NULL);  // dando join em todas threads
     free(client_thread_ids); // liberando a memoria do vetor de threads
     pthread_mutex_destroy(&mutex_gate_queue);
-    pthread_cond_destroy(&cond_gate_open);
 }

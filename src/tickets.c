@@ -15,17 +15,17 @@ pthread_t *ticket_thread_ids; // alocando o vetor de threads de maneira pública
 int ticket_n_args;
 
 pthread_mutex_t mutex_gate_queue_tickets; // mutex para proteger a queue
-pthread_cond_t cond_gate_open_tickets; // condicional de liberar acesso ao portao
+
 
 // Thread que implementa uma bilheteria
 void *sell(void *args){
 
     ticket_t *ticket = (ticket_t *) args; // cast do ticket 
 
-    debug("[INFO] - Bilheteria [%d] abriu!\n", ticket->id);
+    debug("[INFO] - Bilheteria [%d] abriu!\n", ticket->id); // Cada funcionário é representado por um número de bilheteria
 
     // mantem o loop rodando até um break
-    while (1) {
+    while (TRUE) {
 
         pthread_mutex_lock(&mutex_gate_queue_tickets); // da lock no mutex para evitar condição de corrida na hora de verificar e retirar da fila
         if (is_queue_empty(gate_queue)){ // verifica se tem cliente na fila de atendimento
@@ -33,17 +33,22 @@ void *sell(void *args){
             break; // quebra o while se a fila está vazia
         }
 
-        int cliente_id = dequeue(gate_queue);
-        debug("[INFO] - Turista %d foi atendido na bilheteria %d!\n", cliente_id, ticket->id);
+        int client_id = dequeue(gate_queue); // Repassa para a variavel local, qual cliente foi atendido
         pthread_mutex_unlock(&mutex_gate_queue_tickets);
 
-        // client_t *client = find_client_by_id(cliente_id);
-        // pthread_mutex_lock(&client->mutex);
-        // client->ticket = 1;
-        // pthread_cond_signal(&cond_gate_open_tickets);
-        // pthread_mutex_unlock(&client->mutex);
+        pthread_mutex_lock(&mutex_client_id_global); // protege o acesso à variável global
+        client_id_global = client_id; // atualiza a variável global
+        pthread_cond_broadcast(&cond_client_id); // Sinaliza quando um cliente é atendido
+        pthread_mutex_unlock(&mutex_client_id_global);
+
+        debug("[INFO] - Turista [%d] foi atendido na bilheteria [%d]!\n", client_id_global, ticket->id);
+        sleep(1);
     }
 
+    pthread_mutex_lock(&mutex_client_id_global);
+    pthread_cond_broadcast(&cond_client_id); // Assegura que todos os clientes saiam da espera ao final da bilheteria
+    pthread_mutex_unlock(&mutex_client_id_global);
+    
     debug("[INFO] - Bilheteria [%d] fechou!\n", ticket->id);
 
     pthread_exit(NULL);
@@ -51,8 +56,9 @@ void *sell(void *args){
 
 // Essa função recebe como argumento informações sobre a bilheteria e deve iniciar os atendentes.
 void open_tickets(tickets_args *args){
-    pthread_mutex_init(&mutex_gate_queue_tickets, NULL);
-    pthread_cond_init(&cond_gate_open_tickets, NULL);
+    pthread_mutex_init(&mutex_gate_queue_tickets, NULL); // inicializa o mutex para proteger a fila
+
+
     ticket_n_args = args->n;
     ticket_thread_ids = (pthread_t *) malloc(ticket_n_args * sizeof(pthread_t)); // alocando o vetor de threads com tamanho dinâmico
     for (int i = 0; i < ticket_n_args; i++) {
@@ -66,6 +72,5 @@ void close_tickets(){
     for (int i = 0; i < ticket_n_args; i++)
         pthread_join(ticket_thread_ids[i], NULL);  // dando join em todas threads
     free(ticket_thread_ids); // liberando a memoria do vetor de threads
-    pthread_mutex_destroy(&mutex_gate_queue_tickets);
-    pthread_cond_destroy(&cond_gate_open_tickets);    
+    pthread_mutex_destroy(&mutex_gate_queue_tickets); // destrói os mutexs e a condicional
 }

@@ -44,6 +44,7 @@ toy_t **init_toys(int number){
         toys[i] = (toy_t *) malloc(sizeof(toy_t));
         toys[i]->id = i + 1;
         toys[i]->capacity = rand() % (MAX_CAPACITY_TOY - 1) + MIN_CAPACITY_TOY;
+        toys[i]->n_clientes_atual = 0; //Inicializa todos os brinquedos com 0 pessoas;
     }
     return toys;
 }
@@ -63,6 +64,8 @@ void finish_clients(client_t **clients, int number_clients){
     for (int i = 0; i < number_clients; i++){
         free(clients[i]);
     }
+    pthread_mutex_destroy(&mutex_client_id_global); // Destruindo os mutexs utilizados para o controle de entrada
+    pthread_cond_destroy(&cond_client_id);
     free(clients);
 }
 
