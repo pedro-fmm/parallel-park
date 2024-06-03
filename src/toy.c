@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <time.h>
 
 #include "toy.h"
 #include "shared.h"
@@ -27,17 +26,8 @@ void *turn_on(void *args) {
 
     debug("[ON] - O brinquedo  [%d] foi ligado.\n", toy->id);
 
-    time_t start_time = time(NULL); // Obtém o tempo inicial
-
-    while (TRUE) {
-        time_t current_time = time(NULL);
-        double elapsed_time = difftime(current_time, start_time);
-
-        if (elapsed_time >= TEMPO_BRINQUEDO) {
-            break; // Sai do loop se o tempo máximo de operação for atingido
-        }
-
-        pthread_mutex_lock(&toy->mutex_numero_clientes);
+    while (n_pessoas_parque > 0) { // Enquanto tiver pessoas no parque, os brinquedos continuam ligados
+        pthread_mutex_lock(&toy->mutex_numero_clientes); // Protege a leitura do numero de clientes no brinquedo
         if (toy->n_clientes_atual > 0) {
             debug("[BRINCAR] - Brinquedo [%d] está funcionando com [%d] clientes.\n", toy->id, toy->n_clientes_atual);
             pthread_mutex_unlock(&toy->mutex_numero_clientes);

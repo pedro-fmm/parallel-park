@@ -7,6 +7,7 @@
 
 int NUM_TOYS;
 int client_id_global = 0;
+int n_pessoas_parque = 0;
 
 // Definição dos mutexes usados
 pthread_mutex_t mutex_client_id_global = PTHREAD_MUTEX_INITIALIZER;

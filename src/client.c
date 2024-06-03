@@ -18,6 +18,8 @@ pthread_t *client_thread_ids; // alocando o vetor de threads de maneira pública
 int client_n_args;
 
 pthread_mutex_t mutex_gate_queue; // mutex para proteger queue
+pthread_mutex_t mutex_qnt_turistas; // mutex para proteger n_pessoas_parque
+
 
 // Thread que implementa o fluxo do cliente no parque.
 void *enjoy(void *arg){
@@ -33,7 +35,7 @@ void *enjoy(void *arg){
     // enquanto cliente tem moeda, escolher um brinquedo e andar
     while (client->coins > 0) {
         // Cliente escolhe um brinquedo
-        int toy_id = rand() % NUM_TOYS;
+        int toy_id = (rand() % NUM_TOYS) + 1;
         toy_t *toy = client->toys[toy_id];
 
         //Protege o acesso a n_clientes_atual
@@ -53,12 +55,13 @@ void *enjoy(void *arg){
         // Sai do cliente e atualiza o numero de clientes
         pthread_mutex_lock(&toy->mutex_numero_clientes);
         toy->n_clientes_atual--;
-        pthread_cond_signal(&toy->cond_toy);
+        pthread_cond_broadcast(&toy->cond_toy);
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
 
         // Diminui a quantidade de moedas do cliente
         client->coins--;
     }
+    n_pessoas_parque--; // Decrementa o numero de pessoas no parque;
 
     debug("[EXIT] - O turista [%d] saiu do parque.\n", client->id);
     pthread_exit(NULL);
@@ -97,7 +100,9 @@ void queue_enter(client_t *self){
 // Essa função recebe como argumento informações sobre o cliente e deve iniciar os clientes.
 void open_gate(client_args *args){
     pthread_mutex_init(&mutex_gate_queue, NULL);
+    pthread_mutex_init(&mutex_qnt_turistas, NULL);
     client_n_args = args->n;
+    n_pessoas_parque = client_n_args; // Pega o numero inicial de pessoas no parque;
     client_thread_ids = (pthread_t *) malloc(client_n_args * sizeof(pthread_t)); // alocando o vetor de threads com tamanho dinâmico
     for (int i = 0; i < client_n_args; i++) {
         pthread_create(&client_thread_ids[i], NULL, enjoy, (void *) args->clients[i]); // inicializando cada cliente
@@ -110,4 +115,6 @@ void close_gate(){
         pthread_join(client_thread_ids[i], NULL);  // dando join em todas threads
     free(client_thread_ids); // liberando a memoria do vetor de threads
     pthread_mutex_destroy(&mutex_gate_queue);
+    pthread_mutex_destroy(&mutex_qnt_turistas);
+
 }

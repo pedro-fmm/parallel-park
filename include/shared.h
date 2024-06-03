@@ -6,6 +6,7 @@
 // Você pode declarar novas funções (ou variaveis compartilhadas) aqui
 
 extern int NUM_TOYS;
+extern int n_pessoas_parque;
 extern int client_id_global;
 
 // Mutexes para proteger as variáveis globais do controle de entrada de cliente no parque
