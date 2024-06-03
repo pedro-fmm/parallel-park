@@ -50,13 +50,15 @@ void *enjoy(void *arg){
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
 
         // Brinca no brinquedo
-        sleep(5);
+        sleep(1);
         
         // Sai do cliente e atualiza o numero de clientes
         pthread_mutex_lock(&toy->mutex_numero_clientes);
         toy->n_clientes_atual--;
         pthread_cond_broadcast(&toy->cond_toy);
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
+        
+        debug("[BRINCAR] - Turista [%d] saiu do brinquedo [%d].\n", client->id, toy->id);
 
         // Diminui a quantidade de moedas do cliente
         client->coins--;
