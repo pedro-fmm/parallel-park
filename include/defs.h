@@ -33,6 +33,9 @@ typedef struct toy{
   int n_clientes_atual;     // Variavel para ver o número de clientes atualmente no brinquedo
   pthread_mutex_t mutex_numero_clientes; // Mutex para proteger n_clientes_atual
   pthread_cond_t cond_toy;               // Condicional para controlar a quantidade de turista no brinquedo
+  sem_t semaforo_entrar_no_brinquedo;  // semaforo para aguardar entrar no brinquedo
+  sem_t semaforo_brincando; // semaforo das threads(clientes) no brinquedo
+  int brincando;  // variavel para bloquear a entrada no caso do brinquedo estar rodando
 } toy_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */

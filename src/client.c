@@ -35,9 +35,15 @@ void *enjoy(void *arg){
     // enquanto cliente tem moeda, escolher um brinquedo e andar
     while (client->coins > 0) {
         // Cliente escolhe um brinquedo
-        int toy_id = (rand() % NUM_TOYS) ;
+        int toy_id = rand() % NUM_TOYS;
+        if (NUM_TOYS == 1) // trata o caso de haver somente um brinquedo
+            toy_id = 0;
         toy_t *toy = client->toys[toy_id];
 
+        // sem_wait(&toy->semaforo_entrar_no_brinquedo); // coloca cliente numa "fila" para entrar no brinquedo
+        // debug("[BRINCAR] - Turista [%d] aguardando o brinquedo [%d] iniciar.\n", client->id, toy_id + 1);
+
+        pthread_mutex_lock(&client->mutex); 
         //Protege o acesso a n_clientes_atual
         pthread_mutex_lock(&toy->mutex_numero_clientes);
         //Aguarda o brinquedo ter espaço
@@ -58,7 +64,8 @@ void *enjoy(void *arg){
         pthread_cond_broadcast(&toy->cond_toy);
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
         
-        debug("[BRINCAR] - Turista [%d] saiu do brinquedo [%d].\n", client->id, toy->id);
+        pthread_mutex_unlock(&client->mutex);
+        // debug("[BRINCAR] - Turista [%d] saiu do brinquedo [%d].\n", client->id, toy->id);
 
         // Diminui a quantidade de moedas do cliente
         client->coins--;

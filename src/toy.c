@@ -29,11 +29,16 @@ void *turn_on(void *args) {
     debug("[ON] - O brinquedo  [%d] foi ligado.\n", toy->id);
 
     while (n_pessoas_parque > 0) { // Enquanto tiver pessoas no parque, os brinquedos continuam ligados
+
+        debug("[BRINCAR] - Brinquedo [%d] está aguardando clientes.\n", toy->id);
+        sleep(2); // aguardar clientes
+
+        
         pthread_mutex_lock(&toy->mutex_numero_clientes); // Protege a leitura do numero de clientes no brinquedo
         if (toy->n_clientes_atual > 0) {
             debug("[BRINCAR] - Brinquedo [%d] está funcionando com [%d] clientes.\n", toy->id, toy->n_clientes_atual);
             pthread_mutex_unlock(&toy->mutex_numero_clientes);
-            // sleep(5);  // Simula a duração da brincadeira
+            sleep(2);  // Simula a duração da brincadeira
             pthread_mutex_lock(&toy->mutex_numero_clientes);
             toy->n_clientes_atual = 0;  // Libera todos os clientes do brinquedo após a brincadeira
             pthread_cond_broadcast(&toy->cond_toy);
@@ -58,7 +63,7 @@ void open_toys(toy_args *args){
     NUM_TOYS = toy_n_args;
     toy_thread_ids = (pthread_t *) malloc(toy_n_args * sizeof(pthread_t)); // alocando o vetor de threads com tamanho dinâmico
     for (int i = 0; i < toy_n_args; i++)
-        pthread_create(&toy_thread_ids[i], NULL, turn_on, (void *) args->toys[i]); // inicializando cada bilheteria
+        pthread_create(&toy_thread_ids[i], NULL, turn_on, (void *) args->toys[i]); // inicializando cada brinquedo
 }
 
 // Desligando os brinquedos
