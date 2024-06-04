@@ -22,6 +22,8 @@ void *sell(void *args){
 
     ticket_t *ticket = (ticket_t *) args; // cast do ticket 
 
+    ticket->thread = pthread_self();
+
     debug("[INFO] - Bilheteria [%d] abriu!\n", ticket->id); // Cada funcionário é representado por um número de bilheteria
 
     // mantem o loop rodando até um break
@@ -58,13 +60,10 @@ void *sell(void *args){
 void open_tickets(tickets_args *args){
     pthread_mutex_init(&mutex_gate_queue_tickets, NULL); // inicializa o mutex para proteger a fila
 
-
     ticket_n_args = args->n;
     ticket_thread_ids = (pthread_t *) malloc(ticket_n_args * sizeof(pthread_t)); // alocando o vetor de threads com tamanho dinâmico
-    for (int i = 0; i < ticket_n_args; i++) {
+    for (int i = 0; i < ticket_n_args; i++)
         pthread_create(&ticket_thread_ids[i], NULL, sell, (void *) args->tickets[i]); // inicializando cada bilheteria
-        args->tickets[i]->thread = ticket_thread_ids[i]; // preenchendo o valor de thread
-    }
 }
 
 // Essa função deve finalizar a bilheteria
