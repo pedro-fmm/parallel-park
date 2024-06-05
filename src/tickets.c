@@ -28,7 +28,7 @@ void *sell(void *args){
     while (TRUE) {
 
         pthread_mutex_lock(&mutex_gate_queue_tickets); // Da lock no mutex para evitar condição de corrida na hora de verificar e retirar da fila
-        if (is_queue_empty(gate_queue)){ // verifica se tem cliente na fila de atendimento 
+        if (is_queue_empty(gate_queue) && clientes_chegaram){ // verifica se tem cliente na fila de atendimento e verifica se já teve cliente que chegou, para evitar o caso dessa condição acontecer antes de algum cliente ser colocado na fila
             pthread_mutex_unlock(&mutex_gate_queue_tickets);
             break; // quebra o while se a fila está vazia
         }

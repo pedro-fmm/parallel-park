@@ -84,7 +84,7 @@ void buy_coins(client_t *self){
 void wait_ticket(client_t *self){
     // Utilizamos a thread condicional, para que o turista só entre no parque depois que for atendido pela bilheteria
     pthread_mutex_lock(&mutex_client_id_global);
-    while (self->id != client_id_global) {
+    while (client_id_global <= 0) {
         pthread_cond_wait(&cond_client_id, &mutex_client_id_global);
     }
     pthread_mutex_unlock(&mutex_client_id_global);
@@ -96,6 +96,7 @@ void queue_enter(client_t *self){
 
     pthread_mutex_lock(&mutex_gate_queue); // protege o acesso a fila
     enqueue(gate_queue, self->id); // enfileira o cliente para a bilheteria
+    clientes_chegaram = 1; // Variavel global para evitar que a bilheteria feche antes dos primeiros clientes entrarem na fila
     pthread_mutex_unlock(&mutex_gate_queue); 
 
     // Espera o cliente ser atendido na bilheteria para comprar as moedas
