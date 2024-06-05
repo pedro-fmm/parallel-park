@@ -43,13 +43,8 @@ void *enjoy(void *arg){
         //Protege o acesso a n_clientes_atual
         pthread_mutex_lock(&toy->mutex_numero_clientes);
 
-        // Aguarda o brinquedo terminar se ele já estiver em funcionamento
-        while (toy->ocupado) {
-            pthread_cond_wait(&toy->cond_ocupado, &toy->mutex_numero_clientes);
-        }
-
-        //Aguarda o brinquedo ter espaço se ele tiver cheio
-        while (toy->n_clientes_atual >= toy->capacity) {
+        // Aguarda o brinquedo terminar se ele já estiver em funcionamento, e aguarda ele esvaziar se tiver cheio
+        while (toy->ocupado || toy->n_clientes_atual >= toy->capacity) {
             pthread_cond_wait(&toy->cond_toy, &toy->mutex_numero_clientes);
         }
 
@@ -101,7 +96,6 @@ void queue_enter(client_t *self){
 
     pthread_mutex_lock(&mutex_gate_queue); // protege o acesso a fila
     enqueue(gate_queue, self->id); // enfileira o cliente para a bilheteria
-    clientes_chegaram = 1; // Variavel global para evitar que a bilheteria feche antes dos primeiros clientes entrarem na fila
     pthread_mutex_unlock(&mutex_gate_queue); 
 
     // Espera o cliente ser atendido na bilheteria para comprar as moedas

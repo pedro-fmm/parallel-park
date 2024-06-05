@@ -34,7 +34,6 @@ typedef struct toy{
   pthread_mutex_t mutex_numero_clientes; // Mutex para proteger n_clientes_atual
   pthread_cond_t cond_toy;               // Condicional para controlar a quantidade de turista no brinquedo
   int ocupado;                           // Variavel para saber se o brinquedo está em funcionamento
-  pthread_cond_t cond_ocupado;           // Condicional para controlar se o brinquedo está ocupado
 } toy_t;
 
 /* Adicione as estruturas de sincronização que achar necessárias */

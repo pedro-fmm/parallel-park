@@ -24,7 +24,6 @@ void *turn_on(void *args) {
 
     pthread_mutex_init(&toy->mutex_numero_clientes, NULL); // Inicializando o mutex que protege o numero de clientes
     pthread_cond_init(&toy->cond_toy, NULL); // Inicializando a condição para o controle de o brinquedo está com a capacidade máxima
-    pthread_cond_init(&toy->cond_ocupado, NULL); // Inicializando a condição  para saber se o brinquedo está em funcionamento
 
 
     debug("[ON] - O brinquedo  [%d] foi ligado.\n", toy->id);
@@ -42,7 +41,6 @@ void *turn_on(void *args) {
             toy->n_clientes_atual = 0;  // Libera todos os clientes do brinquedo após a brincadeira
             toy->ocupado = 0;  // Coloca o brinquedo como disponivel
             pthread_cond_broadcast(&toy->cond_toy);  // Dá o sinal que o brinquedo está vazio 
-            pthread_cond_broadcast(&toy->cond_ocupado); // Dá o sinal que o brinquedo não está mais ocupado
             pthread_mutex_unlock(&toy->mutex_numero_clientes);
         } else {
             pthread_mutex_unlock(&toy->mutex_numero_clientes);
@@ -55,7 +53,6 @@ void *turn_on(void *args) {
     // Libera os mutexs usados
     pthread_mutex_destroy(&toy->mutex_numero_clientes);
     pthread_cond_destroy(&toy->cond_toy);
-    pthread_cond_destroy(&toy->cond_ocupado);
 
     pthread_exit(NULL);
 }
