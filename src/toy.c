@@ -32,10 +32,10 @@ void *turn_on(void *args) {
     while (n_pessoas_parque > 0) { // Enquanto tiver pessoas no parque, os brinquedos continuam ligados
         pthread_mutex_lock(&toy->mutex_numero_clientes); // Protege a leitura do numero de clientes no brinquedo
         if (toy->n_clientes_atual > 0) {
-            debug("[BRINCAR] - Brinquedo [%d] está funcionando com [%d] clientes.\n", toy->id, toy->n_clientes_atual);
+            debug("[PLAY] - Brinquedo [%d] está funcionando com [%d] clientes.\n", toy->id, toy->n_clientes_atual);
             toy->ocupado = 1; // Coloca o brinquedo como ocupado, para que não entre clientes enquanto ele está em ação
             pthread_mutex_unlock(&toy->mutex_numero_clientes);
-            sleep(5);  // Simula a duração da brincadeira
+            sleep(3);  // Simula a duração da brincadeira
 
             pthread_mutex_lock(&toy->mutex_numero_clientes);
             toy->n_clientes_atual = 0;  // Libera todos os clientes do brinquedo após a brincadeira

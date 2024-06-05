@@ -54,7 +54,7 @@ void *enjoy(void *arg){
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
 
         // Espera o tempo do turista terminar de brincar no brinquedo
-        sleep(2);
+        sleep(3);
 
         // Sai do brinquedo e atualiza o numero de clientes
         pthread_mutex_lock(&toy->mutex_numero_clientes);
