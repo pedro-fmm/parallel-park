@@ -15,7 +15,7 @@
 #include "shared.h"
 
 pthread_t *client_thread_ids; // alocando o vetor de threads de maneira pública, para conseguir rodar o close_gate
-int client_n_args;
+int client_n_args;  // Alocando o numero de clientes de forma global
 
 pthread_mutex_t mutex_gate_queue; // mutex para proteger queue
 pthread_mutex_t mutex_qnt_turistas; // mutex para proteger n_pessoas_parque
@@ -30,51 +30,55 @@ void *enjoy(void *arg){
 
     queue_enter(client); // Turista entra na fila, e compra as moedas
 
-    debug("[EXIT] - O turista [%d] entrou no parque.\n", client->id);
 
-    // enquanto cliente tem moeda, escolher um brinquedo e andar
+
+    debug("[ENTER] - O turista [%d] entrou no parque.\n", client->id);
+
+    // Enquanto cliente tem moeda, escolher um brinquedo e brinca nele
     while (client->coins > 0) {
         // Cliente escolhe um brinquedo
-        int toy_id = rand() % NUM_TOYS;
-        if (NUM_TOYS == 1) // trata o caso de haver somente um brinquedo
-            toy_id = 0;
+        int toy_id = (rand() % NUM_TOYS) ;
         toy_t *toy = client->toys[toy_id];
 
-        // sem_wait(&toy->semaforo_entrar_no_brinquedo); // coloca cliente numa "fila" para entrar no brinquedo
-        // debug("[BRINCAR] - Turista [%d] aguardando o brinquedo [%d] iniciar.\n", client->id, toy_id + 1);
-
-        pthread_mutex_lock(&client->mutex); 
         //Protege o acesso a n_clientes_atual
         pthread_mutex_lock(&toy->mutex_numero_clientes);
-        //Aguarda o brinquedo ter espaço
+
+        // Aguarda o brinquedo terminar se ele já estiver em funcionamento
+        while (toy->ocupado) {
+            pthread_cond_wait(&toy->cond_ocupado, &toy->mutex_numero_clientes);
+        }
+
+        //Aguarda o brinquedo ter espaço se ele tiver cheio
         while (toy->n_clientes_atual >= toy->capacity) {
             pthread_cond_wait(&toy->cond_toy, &toy->mutex_numero_clientes);
         }
+
         // Atualiza o numero de clientes no brinquedo
         toy->n_clientes_atual++;
-        debug("[BRINCAR] - Turista [%d] entrou no brinquedo [%d].\n", client->id, toy_id + 1);
+        debug("[PLAY] - Turista [%d] entrou no brinquedo [%d].\n", client->id, toy_id + 1);
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
 
-        // Brinca no brinquedo
-        sleep(1);
-        
-        // Sai do cliente e atualiza o numero de clientes
+        // Espera o tempo do turista terminar de brincar no brinquedo
+        sleep(2);
+
+        // Sai do brinquedo e atualiza o numero de clientes
         pthread_mutex_lock(&toy->mutex_numero_clientes);
+        debug("[PLAY] - Turista [%d] saiu do brinquedo [%d].\n", client->id, toy_id + 1);
         toy->n_clientes_atual--;
-        pthread_cond_broadcast(&toy->cond_toy);
         pthread_mutex_unlock(&toy->mutex_numero_clientes);
-        
-        pthread_mutex_unlock(&client->mutex);
-        // debug("[BRINCAR] - Turista [%d] saiu do brinquedo [%d].\n", client->id, toy->id);
 
         // Diminui a quantidade de moedas do cliente
         client->coins--;
+
+
+
     }
     n_pessoas_parque--; // Decrementa o numero de pessoas no parque;
 
     debug("[EXIT] - O turista [%d] saiu do parque.\n", client->id);
     pthread_exit(NULL);
 }
+
 
 // Funcao onde o cliente compra as moedas para usar os brinquedos
 void buy_coins(client_t *self){
@@ -97,6 +101,7 @@ void queue_enter(client_t *self){
 
     pthread_mutex_lock(&mutex_gate_queue); // protege o acesso a fila
     enqueue(gate_queue, self->id); // enfileira o cliente para a bilheteria
+    clientes_chegaram = 1; // Variavel global para evitar que a bilheteria feche antes dos primeiros clientes entrarem na fila
     pthread_mutex_unlock(&mutex_gate_queue); 
 
     // Espera o cliente ser atendido na bilheteria para comprar as moedas
@@ -110,8 +115,8 @@ void queue_enter(client_t *self){
 void open_gate(client_args *args){
     pthread_mutex_init(&mutex_gate_queue, NULL);
     pthread_mutex_init(&mutex_qnt_turistas, NULL);
-    client_n_args = args->n;
-    n_pessoas_parque = client_n_args; // Pega o numero inicial de pessoas no parque;
+    client_n_args = args->n; // Pega o numero inicial de pessoas no parque;
+    n_pessoas_parque = client_n_args; // Passa esse numero para a variavel global
     client_thread_ids = (pthread_t *) malloc(client_n_args * sizeof(pthread_t)); // alocando o vetor de threads com tamanho dinâmico
     for (int i = 0; i < client_n_args; i++) {
         pthread_create(&client_thread_ids[i], NULL, enjoy, (void *) args->clients[i]); // inicializando cada cliente
@@ -121,9 +126,9 @@ void open_gate(client_args *args){
 // Essa função deve finalizar os clientes
 void close_gate(){
     for (int i = 0; i < client_n_args; i++)
-        pthread_join(client_thread_ids[i], NULL);  // dando join em todas threads
-    free(client_thread_ids); // liberando a memoria do vetor de threads
-    pthread_mutex_destroy(&mutex_gate_queue);
+        pthread_join(client_thread_ids[i], NULL);  // Dando join em todas threads
+    free(client_thread_ids); // Liberando a memoria do vetor de threads
+    pthread_mutex_destroy(&mutex_gate_queue); // Liberando os mutexs usados
     pthread_mutex_destroy(&mutex_qnt_turistas);
 
 }

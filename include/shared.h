@@ -8,6 +8,7 @@
 extern int NUM_TOYS;
 extern int n_pessoas_parque;
 extern int client_id_global;
+extern int clientes_chegaram;
 
 // Mutexes para proteger as variáveis globais do controle de entrada de cliente no parque
 extern pthread_mutex_t mutex_client_id_global;

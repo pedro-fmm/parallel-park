@@ -45,6 +45,7 @@ toy_t **init_toys(int number){
         toys[i]->id = i + 1;
         toys[i]->capacity = rand() % (MAX_CAPACITY_TOY - 1) + MIN_CAPACITY_TOY;
         toys[i]->n_clientes_atual = 0; //Inicializa todos os brinquedos com 0 pessoas;
+        toys[i]->ocupado = 0;    // Variavel para saber se o brinquedo está ocupado funcionando
     }
     return toys;
 }
